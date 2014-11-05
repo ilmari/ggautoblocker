@@ -99,7 +99,7 @@ sub get_screen_names {
 	my @ids = @$user_ids;
 	my @names;
 
-	while ( $#ids > 0 ) {
+	while ( @ids ) {
 		wait_for_rate_limit('lookup_users');
 
 		my @subset_ids = splice @ids, 0, 100;
@@ -176,9 +176,9 @@ foreach my $id (@follower_ids) {
 }
 
 # print out some stats
-print "> $#follower_ids users following idiots.\n";
-print "> " . ($#sheeple_ids + $#shared_ids ) . " users following multiple accounts.\n";
-print "> $#shared_ids users following me.\n";
+print "> " . @follower_ids ." users following idiots.\n";
+print "> " . (@sheeple_ids + @shared_ids) . " users following multiple accounts.\n";
+print "> " . @shared_ids . " users following me.\n";
 
 
 # save ids to file if we're debugging
