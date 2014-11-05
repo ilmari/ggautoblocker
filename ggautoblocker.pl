@@ -110,16 +110,11 @@ sub get_screen_names {
 
 
 # is username in whitelist?
+my %is_whitelisted = map { lc $_ => 1} @whitelist;
 sub is_whitelisted {
 	my $sheep = shift;
 
-	if ( @whitelist ) {
-		foreach my $notasheep ( @whitelist ) {
-			return 1 if $notasheep =~ $sheep;
-		}
-	}
-
-	return 0;
+	return $is_whitelisted{lc $sheep};
 }
 
 # write a list of names to a file unless they're whitelisted
@@ -149,8 +144,7 @@ foreach my $idiot ( @idiots ) {
 
 # get a list of our personal followers
 print "Getting a list of my followers for comparison.\n";
-@myfollower_ids = get_followers;
-
+my %id_follows_me = map { $_ => 1 } get_followers;
 
 # get a list of unique IDs.
 print "Examining follower lists...\n";
@@ -161,24 +155,13 @@ print "Examining follower lists...\n";
 # API calls later when we're checking usernames.
 my %seen;
 foreach my $id (@follower_ids) {
-	if ( exists $seen{$id} ) {
-		next if $seen{$id} != 1;
-		$seen{$id}++;
+	next if $seen{$id}++;
 
-		my $found = 0;
-
-		# does this id exist in our followers?
-		foreach my $my_id ( @myfollower_ids ) {
-			if ( $my_id == $id ) {
-				push @shared_ids, $id;
-				$found = 1;
-			}
-		}
-
-		push @sheeple_ids, $id if $found == 0;
-
+	# does this id exist in our followers?
+	if ($id_follows_me{$id}) {
+		push @shared_ids, $id;
 	} else {
-		$seen{$id} = 1;
+		push @sheeple_ids, $id;
 	}
 }
 
