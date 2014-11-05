@@ -40,21 +40,16 @@ sub get_rate_limit {
 
 	my $m = $nt->rate_limit_status;
 
-		if ( $m->{'resources'}->{'application'}->{'/application/rate_limit_status'}->{'remaining'} == 0 ) {
-			print " -- API limit reached, waiting for ". ( $m->{'resources'}->{'application'}->{'/application/rate_limit_status'}->{'reset'} - time ) . " seconds --\n" if $debug;
-		sleep ( $m->{'resources'}->{'application'}->{'/application/rate_limit_status'}->{'reset'} - time + 1 );
+	my $rate_limit_limits = $m->{'resources'}->{'application'}->{'/application/rate_limit_status'};
+	if ( $rate_limit_limits->{'remaining'} == 0 ) {
+		print " -- API limit reached, waiting for ". ( $rate_limit_limits->{'reset'} - time ) . " seconds --\n" if $debug;
+		sleep ( $rate_limit_limits->{'reset'} - time + 1 );
 	}
 
 	if ( $type =~ /followers/ ) {
-		return { 
-			remaining => $m->{'resources'}->{'followers'}->{'/followers/ids'}->{'remaining'}, 
-			reset => $m->{'resources'}->{'followers'}->{'/followers/ids'}->{'reset'} 
-		};
+		return $m->{'resources'}->{'followers'}->{'/followers/ids'};
 	} elsif ( $type =~ /lookup_users/ ) {
-		return {
-			remaining => $m->{'resources'}->{'users'}->{'/users/lookup'}->{'remaining'},
-			reset => $m->{'resources'}->{'users'}->{'/users/lookup'}->{'reset'}
-		};
+		return $m->{'resources'}->{'users'}->{'/users/lookup'};
 	}
 }
 
