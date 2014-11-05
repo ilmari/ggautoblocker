@@ -122,7 +122,19 @@ sub is_whitelisted {
 	return 0;
 }
 
+# write a list of names to a file unless they're whitelisted
+sub write_list_to_file {
+	my $file = shift;
+	my @names = @_;
 
+	open my $bl, '>', $file or die "Can't open $file: $!\n";
+	foreach my $name ( sort @names ) {
+		next if is_whitelisted( $name );
+
+		print $bl "$name\n" or die "Can't write to $file: $!\n";
+	}
+	close $bl or die "Can't close $file: $!\n";
+}
 
 print "This is going to take a while, because API limits are dumb.\n\n";
 $| = 1;
@@ -179,11 +191,11 @@ print "> " . @shared_ids . " users following me.\n";
 # save ids to file if we're debugging
 if ( $debug ) {
 	print "Saving list of IDs to block_ids.txt.\n";
-	open BL, '>block_ids.txt' or die "Can't open block_ids.txt: $!\n";
-	foreach ( @sheeple_ids, @shared_ids ) {
-		print BL "$_\n";
+	open my $bl, '>block_ids.txt' or die "Can't open block_ids.txt: $!\n";
+	foreach ( sort { $a <=> $b } @sheeple_ids, @shared_ids ) {
+		print $bl "$_\n" or die "Can't print to block_ids.txt: $!\n";
 	}
-	close BL;
+	close $bl or die "Can't close block_ids.txt: $!\n";
 }
 
 
@@ -196,22 +208,10 @@ print "Getting list of usernames from IDs.\n";
 
 # save to a file, but only if they aren't part of the whitelist.
 print "Saving list of usernames to block_names.txt.\n";
-open BL, '>block_names.txt' or die "Can't open block_names.txt: $!\n";
-foreach my $sheep ( @sheeple_names ) {
-	next if is_whitelisted( $sheep );
-
-	print BL "$sheep\n";
-}
-close BL;
+write_list_to_file('block_names.txt', @sheeple_names);
 
 print "Saving list of my suspect followers usernames to shared_names.txt.\n";
-open BL, '>shared_names.txt' or die "Can't open shared_names.txt: $!\n";
-foreach my $sheep ( @shared_names ) {
-	next if is_whitelisted( $sheep );
-
-	print BL "$sheep\n";
-}
-close BL;
+write_list_to_file('shared_names.txt', @shared_names);
 
 # TODO: actually block the user!
 # $nt->create_block( { user_id => $id } )
